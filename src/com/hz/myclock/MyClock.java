@@ -1,6 +1,8 @@
 package com.hz.myclock;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -9,7 +11,6 @@ import android.graphics.Paint;
 import android.graphics.Paint.Style;
 import android.graphics.Point;
 import android.util.AttributeSet;
-import android.view.Display;
 import android.view.GestureDetector;
 import android.view.GestureDetector.OnGestureListener;
 import android.view.MotionEvent;
@@ -28,7 +29,9 @@ public class MyClock extends View {
 	private Point minEndPoint;
 	private Point secEndPoint;
 	private Point centerPoint;
-
+	private List<Point> allPointList;
+	private List<Point> nearPointList;
+	
 	private Paint houPaint;
 	private Paint minPaint;
 	private Paint secPaint;
@@ -133,7 +136,9 @@ public class MyClock extends View {
 		secPaint = new Paint();
 		minPaint = new Paint();
 		textPaint = new Paint();
-
+		
+		allPointList = new ArrayList<Point>();
+		
 		// 手势识别
 		detector = new GestureDetector(mContext, new OnGestureListener() {
 
@@ -171,6 +176,7 @@ public class MyClock extends View {
 				if(distance<radiusPow){
 					System.out.println("此次点击在时钟范围内"+i);
 					i++;
+					
 					
 					
 				}
