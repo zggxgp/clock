@@ -77,7 +77,8 @@ public class MyClock extends View {
 	// 选中指针的对应画笔和点
 	private Point selectPoint;
 	private Paint selectPaint;
-
+	private String selectHand;
+	
 	// 保存指针移动前的端点
 	private int oldX;
 	private int oldY;
@@ -110,7 +111,7 @@ public class MyClock extends View {
 		// System.out.println("Measure"+ width);
 		// System.out.println(getWidth());
 	}
-
+	
 	@Override
 	protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
@@ -123,6 +124,7 @@ public class MyClock extends View {
 
 			for (String key : nearPointList.get(0).keySet()) {
 				selectPoint = selectPointList.get(0).get(key);
+				selectHand = key;
 				if (key.equals("sec")) {
 					drawHour(canvas);
 					drawMin(canvas);
