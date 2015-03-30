@@ -17,13 +17,16 @@ import android.view.GestureDetector.OnGestureListener;
 import android.view.MotionEvent;
 import android.view.View;
 
+import com.hz.myclock.util.Clock;
 import com.hz.myclock.util.DisplayUtils;
 
 public class MyClock extends View {
 
 	private int width;
 	private int height;
-
+	
+	private Clock clock;
+	
 	private Context mContext;
 
 	// 各个顶点
@@ -78,13 +81,15 @@ public class MyClock extends View {
 	private Point selectPoint;
 	private Paint selectPaint;
 	private String selectHand;
-	
+
 	// 保存指针移动前的端点
 	private int oldX;
 	private int oldY;
-	
+	private int nowX;
+	private int nowY;
+
 	private ClockThread clockThead;
-	
+
 	// 手势监听器
 	private MyListener mListener;
 
@@ -92,10 +97,10 @@ public class MyClock extends View {
 		super(context, attrs);
 		mContext = context;
 		initObject();
-		
+		clock = Clock.getInstance();
 		clockThead = new ClockThread();
 		clockThead.start();
-		
+
 	}
 
 	@Override
@@ -111,7 +116,7 @@ public class MyClock extends View {
 		// System.out.println("Measure"+ width);
 		// System.out.println(getWidth());
 	}
-	
+
 	@Override
 	protected void onDraw(Canvas canvas) {
 		super.onDraw(canvas);
@@ -161,8 +166,18 @@ public class MyClock extends View {
 				}
 
 			}
-			//System.out.println("开始准备重绘指针");
-		} else {
+			// System.out.println("开始准备重绘指针");
+		}
+		else if(customTime){
+			initCustomTime();
+			drawText(canvas);
+			drawCircle(canvas);
+			drawHour(canvas);
+			drawMin(canvas);
+			drawSec(canvas);
+		}
+		
+		else {
 			initTime();
 			drawText(canvas);
 			drawCircle(canvas);
@@ -172,53 +187,217 @@ public class MyClock extends View {
 		}
 	}
 
+	/**
+	 * 监听手势
+	 */
 	@Override
 	public boolean onTouchEvent(MotionEvent event) {
 		super.onTouchEvent(event);
-		
-		if(setTimeMode==false&&setTimeMode==false){
+
+		if (setTimeMode == false && setTimeMode == false) {
 			detector.onTouchEvent(event);
 			System.out.println("detectorevent");
 		}
-		
 
 		switch (event.getAction()) {
 		case MotionEvent.ACTION_DOWN:
-			
-			if(isSelectedHand(event)&&setTimeMode){
-		
+
+			if (isSelectedHand(event) && setTimeMode) {
+
 				canDrag = true;
-				System.out.println("action_down----------"+canDrag);
+				System.out.println("action_down----------" + canDrag);
 				clockThead.stopTH();
-				}
+			}
 			break;
 
 		case MotionEvent.ACTION_MOVE:
-			
+
 			System.out.println(event.getX());
 			System.out.println(event.getY());
-			
+
 			if (canDrag) {
-				selectPoint.x = (int) event.getX();
-				selectPoint.y = (int) event.getY();
-				
+
+				// 如果选中的是时针
+				if (selectHand == "hour") {
+					System.out.println("selectHand----hour");
+					if (event.getX() - centerPoint.x == 0) {
+						selectPoint.x = centerPoint.x;
+						
+						//当前点在y轴上半部
+						if (centerPoint.y - selectPoint.y > 0) {
+							selectPoint.y = centerPoint.y
+									- (int) (DisplayUtils.Dp2Px(mContext,
+											secLength) * 0.6f);
+							clock.setHour(0);
+						//当前点在y轴下半部
+						} else {
+							selectPoint.y = centerPoint.y
+									+ (int) (DisplayUtils.Dp2Px(mContext,
+											secLength) * 0.6f);
+							clock.setHour(6);
+						}
+
+					} else if (event.getY() - centerPoint.y == 0) {
+						selectPoint.y = centerPoint.y;
+						
+						//当前点在x轴左半部
+						if (centerPoint.x - selectPoint.x > 0) {
+							selectPoint.x = centerPoint.x
+									- (int) (DisplayUtils.Dp2Px(mContext,
+											secLength) * 0.6f);
+						//当前点在x轴右半部	
+						} else {
+							selectPoint.x = centerPoint.x
+									+ (int) (DisplayUtils.Dp2Px(mContext,
+											secLength) * 0.6f);
+						}
+
+					} else {
+						double xLen = getDistancePointToX(event);
+						int yLen = getDistancePointToY(event);
+						
+						double angel = Math.atan(yLen / xLen);
+						
+						
+						
+						
+						System.out.println("angel:-------"+angel);
+						System.out.println("yLen/xLen-----"+yLen/xLen);
+						// 第一象限
+						
+						if (isPointInOne(event)) {
+							if(yLen/xLen>1){
+								
+							}
+							selectPoint.x = centerPoint.x
+									+ (int) (DisplayUtils.Dp2Px(mContext,
+											secLength) * 0.6f * Math.cos(angel));
+							selectPoint.y = centerPoint.y
+									- (int) (DisplayUtils.Dp2Px(mContext,
+											secLength) * 0.6f * Math.sin(angel));
+						}
+
+						// 第二象限
+						if (isPointInTwo(event)) {
+							selectPoint.x = centerPoint.x
+									- (int) (DisplayUtils.Dp2Px(mContext,
+											secLength) * 0.6f * Math.cos(angel));
+							selectPoint.y = centerPoint.y
+									- (int) (DisplayUtils.Dp2Px(mContext,
+											secLength) * 0.6f * Math.sin(angel));
+						}
+
+						// 第三象限
+						if (isPointInThree(event)) {
+							selectPoint.x = centerPoint.x
+									- (int) (DisplayUtils.Dp2Px(mContext,
+											secLength) * 0.6f * Math.cos(angel));
+							selectPoint.y = centerPoint.y
+									+ (int) (DisplayUtils.Dp2Px(mContext,
+											secLength) * 0.6f * Math.sin(angel));
+						}
+
+						// 第四象限
+						if (isPointInFour(event)) {
+							selectPoint.x = centerPoint.x
+									+ (int) (DisplayUtils.Dp2Px(mContext,
+											secLength) * 0.6f * Math.cos(angel));
+							selectPoint.y = centerPoint.y
+									+ (int) (DisplayUtils.Dp2Px(mContext,
+											secLength) * 0.6f * Math.sin(angel));
+						}
+
+					}
+				}
+
 				System.out.println("可以滑动指针了-------------");
 			}
 			break;
 
 		case MotionEvent.ACTION_UP:
-			
+
 			System.out.println("ACTION_UP");
+			if(canDrag){
+				nowX = selectPoint.x;
+				nowY = selectPoint.y;
+				
+				calendar.set(2015, 3, 30, 18, 45, 0);
+				
+				setTimeMode = false;
+				setTimeModePre = false;
+				canDrag = false;
+				
+				clockThead = new ClockThread();
+				clockThead.start();
+				
+				customTime = true;
+				clock = Clock.getInstance();
+				clock.set(6, 45, 0);
+				
+			}
+			
+			
 			break;
 		default:
 			break;
 		}
-		
+
 		invalidate();
-		
+
 		return true;
 	}
 
+	private boolean isPointInOne(MotionEvent e) {
+
+		if (e.getX() > centerPoint.x && e.getY() < centerPoint.y) {
+			return true;
+		} else {
+			return false;
+		}
+
+	}
+
+	private boolean isPointInTwo(MotionEvent e) {
+
+		if (e.getX() < centerPoint.x && e.getY() < centerPoint.y) {
+			return true;
+		} else {
+			return false;
+		}
+
+	}
+
+	private boolean isPointInThree(MotionEvent e) {
+
+		if (e.getX() < centerPoint.x && e.getY() > centerPoint.y) {
+			return true;
+		} else {
+			return false;
+		}
+
+	}
+
+	private boolean isPointInFour(MotionEvent e) {
+
+		if (e.getX() > centerPoint.x && e.getY() > centerPoint.y) {
+			return true;
+		} else {
+			return false;
+		}
+
+	}
+	
+	/**
+	 * 从自定义时钟类中更新时间
+	 */
+	private void initCustomTime(){
+		
+		holdHour = hour = clock.getHour();
+		holdMin = min = clock.getMin();
+		holdSec = sec = clock.getSec();
+	}
+	
+	
 	/**
 	 * 从calendar更新时间
 	 */
@@ -281,6 +460,16 @@ public class MyClock extends View {
 		// 手势识别
 		detector = new GestureDetector(mContext, mListener);
 
+	}
+
+	private int getDistancePointToX(MotionEvent e) {
+		System.out.println((int) Math.abs(e.getX() - centerPoint.x));
+		return  (int) Math.abs(e.getX() - centerPoint.x);
+	}
+
+	private int getDistancePointToY(MotionEvent e) {
+
+		return (int) Math.abs(e.getY() - centerPoint.y);
 	}
 
 	/**
@@ -439,7 +628,6 @@ public class MyClock extends View {
 		int otherDisance = (int) (Math.pow(selectPoint.x - e.getX(), 2) + Math
 				.pow(selectPoint.y - e.getY(), 2));
 
-		
 		System.out.println("distanceHand " + distanceHand);
 		System.out.println("distancePress " + distancePress);
 		System.out.println("otherDisance " + otherDisance);
@@ -447,12 +635,12 @@ public class MyClock extends View {
 		// 余弦公式计算夹角cos
 		cos = (distanceHand + distancePress - otherDisance)
 				/ (2 * Math.sqrt(distanceHand) * Math.sqrt(distancePress));
-		
-		System.out.println("------------cos"+cos);
-		
-		boolean result = 1-cos<=cosLimit;
-		
-		System.out.println("----------------------"+result);
+
+		System.out.println("------------cos" + cos);
+
+		boolean result = 1 - cos <= cosLimit;
+
+		System.out.println("----------------------" + result);
 		return result;
 	}
 
@@ -579,7 +767,8 @@ public class MyClock extends View {
 							System.out.println("有两根指针在同一象限");
 							System.out.println("cos的值" + cos[i]);
 							System.out.println("distanceHand " + distanceHand);
-							System.out.println("distancePress " + distancePress);
+							System.out
+									.println("distancePress " + distancePress);
 							System.out.println("otherDisance " + otherDisance);
 						}
 
@@ -614,12 +803,11 @@ public class MyClock extends View {
 		}
 
 	}
-	
-	
-	private class ClockThread extends Thread{
-		
+
+	private class ClockThread extends Thread {
+
 		private boolean flag = true;
-		
+
 		@Override
 		public void run() {
 			while (flag) {
@@ -627,6 +815,7 @@ public class MyClock extends View {
 				postInvalidate();
 				try {
 					sleep(1000);
+					System.out.println("线程运行中");
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -634,21 +823,32 @@ public class MyClock extends View {
 
 			}
 			
+//			while(true){
+//				try {
+//					sleep(1000);
+//				} catch (InterruptedException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//				System.out.println("非标志位线程运行中");
+//			}
+
+		}
+		
+		public boolean getFlag(){
+			return flag;
 		}
 
-		
-		public void stopTH(){
+		public void stopTH() {
 			flag = false;
+			
 		}
-		
-		public void runTH(){
+
+		public void runTH() {
 			flag = true;
+			
 		}
-		
-		
-		
-		
-		
+
 	}
 
 }
