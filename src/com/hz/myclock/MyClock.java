@@ -245,11 +245,13 @@ public class MyClock extends View {
 							selectPoint.x = centerPoint.x
 									- (int) (DisplayUtils.Dp2Px(mContext,
 											secLength) * 0.6f);
+							clock.setHour(9);
 						//当前点在x轴右半部	
 						} else {
 							selectPoint.x = centerPoint.x
 									+ (int) (DisplayUtils.Dp2Px(mContext,
 											secLength) * 0.6f);
+							clock.setHour(6);
 						}
 
 					} else {
@@ -275,6 +277,7 @@ public class MyClock extends View {
 							selectPoint.y = centerPoint.y
 									- (int) (DisplayUtils.Dp2Px(mContext,
 											secLength) * 0.6f * Math.sin(angel));
+							clock.setHour((int)(3-3*angel/Math.PI*2));
 						}
 
 						// 第二象限
@@ -285,6 +288,7 @@ public class MyClock extends View {
 							selectPoint.y = centerPoint.y
 									- (int) (DisplayUtils.Dp2Px(mContext,
 											secLength) * 0.6f * Math.sin(angel));
+							clock.setHour((int)(3-3*angel/Math.PI*2));
 						}
 
 						// 第三象限
