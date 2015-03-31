@@ -9,13 +9,33 @@
     tools:context="com.hz.myclock.MainActivity$PlaceholderFragment" >
 
     <TextView
+        android:id="@+id/tv_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/hello_world" />
+         />
 	
     <com.hz.myclock.MyClock
         android:id="@+id/myclock"
         android:layout_width="500dp"
         android:layout_height="500dp"
         android:layout_centerInParent="true"/>
+    
+    <Button 
+        android:id="@+id/bt_newyork"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="纽约时间"
+        android:layout_below="@id/tv_time"
+        />
+    
+    <Button 
+        android:id="@+id/bt_shanghai"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="上海时间"
+        android:layout_toRightOf="@id/bt_newyork"
+        android:layout_alignBottom="@id/bt_newyork"
+        />
+    
+    
 </RelativeLayout>
