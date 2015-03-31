@@ -898,11 +898,15 @@ public class MyClock extends View {
 	 */
 	private void initTime() {
 		calendar = Calendar.getInstance();
-		holdHour = hour = calendar.get(Calendar.HOUR);
-		holdMin = min = calendar.get(Calendar.MINUTE);
-		holdSec = sec = calendar.get(Calendar.SECOND);
+//		holdHour = hour = calendar.get(Calendar.HOUR);
+//		holdMin = min = calendar.get(Calendar.MINUTE);
+//		holdSec = sec = calendar.get(Calendar.SECOND);
 		
 		
+		
+		holdHour = hour = calendar.getTime().getHours();
+		holdMin = min = calendar.getTime().getMinutes();
+		holdSec = sec = calendar.getTime().getSeconds();
 		// System.out.println("--------------" + hour);
 		// System.out.println("--------------" + min);
 		// System.out.println("--------------" + sec);
@@ -1388,7 +1392,14 @@ public class MyClock extends View {
 	}
 
 	public void setNewYorkTime() {
-		TimeZone tz = TimeZone.getTimeZone("America/New_York");
+		TimeZone tz = TimeZone.getTimeZone("America/Los_Angeles");
+		TimeZone.setDefault(tz);
+		calendar = Calendar.getInstance();
+	}
+	
+	public void setShangHaiTime(){
+		
+		TimeZone tz = TimeZone.getTimeZone("Asia/Shanghai");
 		TimeZone.setDefault(tz);
 		calendar = Calendar.getInstance();
 	}
